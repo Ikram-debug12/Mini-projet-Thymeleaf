@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Employés</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #2196F3; color: white; }
+        .btn { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-modifier { background: #ff9800; color: white; }
+        .btn-supprimer { background: #f44336; color: white; }
+        .btn-ajouter { background: #4CAF50; color: white; padding: 10px 15px; margin-bottom: 20px; display: inline-block; }
+        .nav a { display: inline-block; margin: 10px; padding: 10px 15px; background: #2c3e50; color: white; text-decoration: none; border-radius: 5px; }
+        .form-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.3); z-index: 1000; width: 400px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div style="background: #2c3e50; padding: 15px; margin-bottom: 20px; text-align: center;">
+    <a href="/" style="color: white; margin: 0 10px; text-decoration: none;">Accueil</a>
+    <a href="/employes" style="color: white; margin: 0 10px; text-decoration: none; background: #2196F3; padding: 5px 10px; border-radius: 5px;">Employés</a>
+    <a href="/types-conge" style="color: white; margin: 0 10px; text-decoration: none;">Types</a>
+    <a href="/demandes" style="color: white; margin: 0 10px; text-decoration: none;">Demandes</a>
+    <a href="/statistiques" style="color: white; margin: 0 10px; text-decoration: none;">Statistiques</a>
+</div>
+
+<div class="container">
+    <h2>👥 Liste des employés</h2>
+    <button onclick="openAjouter()" class="btn btn-ajouter">➕ Ajouter un employé</button>
+
+    <table>
+        <thead>
+        <tr><th>ID</th><th>Nom</th><th>Département</th><th>Date embauche</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="e : ${employes}">
+            <td th:text="${e.id}">-</td>
+            <td th:text="${e.nom}">-</td>
+            <td th:text="${e.departement}">-</td>
+            <td th:text="${e.dateEmbauche}">-</td>
+            <td>
+                <button class="btn btn-modifier"
+                        th:data-id="${e.id}"
+                        th:data-nom="${e.nom}"
+                        th:data-departement="${e.departement}"
+                        th:data-date="${e.dateEmbauche}"
+                        onclick="openModifier(this)">✏️ Modifier</button>
+                <a th:href="@{/employes/supprimer/{id}(id=${e.id})}" class="btn btn-supprimer" onclick="return confirm('Supprimer ?')">🗑️ Supprimer</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="overlay" class="overlay" onclick="closeForm()"></div>
+
+<div id="formAjouter" class="form-popup">
+    <h3>➕ Ajouter un employé</h3>
+    <form method="post" action="/employes/ajouter">
+        <input type="text" name="nom" placeholder="Nom" required>
+        <select name="departement" required>
+            <option value="">Sélectionner</option>
+            <option>Informatique</option>
+            <option>Ressources Humaines</option>
+            <option>Comptabilité</option>
+            <option>Marketing</option>
+        </select>
+        <input type="date" name="dateEmbauche" required>
+        <button type="submit" class="btn btn-ajouter">Ajouter</button>
+        <button type="button" onclick="closeForm()" class="btn btn-supprimer">Annuler</button>
+    </form>
+</div>
+
+<div id="formModifier" class="form-popup">
+    <h3>✏️ Modifier l'employé</h3>
+    <form method="post" action="/employes/modifier">
+        <input type="hidden" name="id" id="modifId">
+        <input type="text" name="nom" id="modifNom" placeholder="Nom" required>
+        <select name="departement" id="modifDepartement" required>
+            <option>Informatique</option>
+            <option>Ressources Humaines</option>
+            <option>Comptabilité</option>
+            <option>Marketing</option>
+        </select>
+        <input type="date" name="dateEmbauche" id="modifDate" required>
+        <button type="submit" class="btn btn-modifier">Modifier</button>
+        <button type="button" onclick="closeForm()" class="btn btn-supprimer">Annuler</button>
+    </form>
+</div>
+
+<script>
+    function openAjouter() {
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('formAjouter').style.display = 'block';
+    }
+
+    function openModifier(btn) {
+        document.getElementById('modifId').value = btn.getAttribute('data-id');
+        document.getElementById('modifNom').value = btn.getAttribute('data-nom');
+        document.getElementById('modifDepartement').value = btn.getAttribute('data-departement');
+        document.getElementById('modifDate').value = btn.getAttribute('data-date');
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('formModifier').style.display = 'block';
+    }
+
+    function closeForm() {
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('formAjouter').style.display = 'none';
+        document.getElementById('formModifier').style.display = 'none';
+    }
+</script>
+</body>
+</html>
